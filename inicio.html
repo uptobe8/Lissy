@@ -13,7 +13,8 @@
 }
 
 @media (max-width:820px){
-  body{overflow-x:hidden}
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  main,.site-header,.mobile-panel,.hero,.section,.phone-band,.quote-band,.site-footer{max-width:100%;overflow-x:hidden;overflow-x:clip}
   .site-header{background:rgba(75,52,43,.96)}
   .header-main{height:76px;grid-template-columns:1fr auto}
   .hamb{width:48px;height:48px;min-width:48px;line-height:1}
@@ -54,7 +55,7 @@
   .phone-band .btn{width:100%;min-height:50px}
   .field input{min-height:52px;font-size:16px}
 
-  .offer-grid,.product-grid,.reviews-track,.steps-grid{display:flex;grid-template-columns:none;gap:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:0;-webkit-overflow-scrolling:touch;padding:0 20px 14px 0;margin-right:-20px}
+  .offer-grid,.product-grid,.reviews-track,.steps-grid{display:flex;grid-template-columns:none;gap:16px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding-left:0;-webkit-overflow-scrolling:touch;padding:0 0 14px 0;margin-right:0;max-width:100%;min-width:0}
   .offer-grid::-webkit-scrollbar,.product-grid::-webkit-scrollbar,.reviews-track::-webkit-scrollbar,.steps-grid::-webkit-scrollbar,.mini-pair::-webkit-scrollbar{display:none}
   .offer-grid,.product-grid,.reviews-track,.steps-grid,.mini-pair{scrollbar-width:none}
   .offer,.product,.review,.step{flex:0 0 min(84vw,370px);scroll-snap-align:start;scroll-snap-stop:always}
@@ -158,4 +159,22 @@
 
 })();
 </script>
+<script>
+(function(){
+  const isAssetPath=(url)=>url&&/(^|\/)assets\//.test(url)&&!/^(https?:)?\/\//.test(url)&&!url.startsWith('data:');
+  const cleanAssetFile=(url)=>url.replace(/^\.\//,'').replace(/^(\.\.\/)+/,'').replace(/^assets\//,'');
+  const unique=(arr)=>[...new Set(arr.filter(Boolean))];
+  const candidatesFor=(url)=>{
+    if(!isAssetPath(url)) return [url];
+    const file=cleanAssetFile(url);
+    return unique([url,'assets/'+file,'./assets/'+file,'../assets/'+file,'../../assets/'+file,'../../../assets/'+file,'/assets/'+file]);
+  };
+  const testImage=(url)=>new Promise((resolve)=>{const img=new Image();img.onload=()=>resolve(url);img.onerror=()=>resolve(null);img.src=url;});
+  const resolveAsset=async(url)=>{for(const candidate of candidatesFor(url)){const ok=await testImage(candidate);if(ok)return ok;}return null;};
+  const bgUrl=(value)=>{const match=String(value||'').match(/url\(["']?([^"')]+)["']?\)/);return match?match[1]:'';};
+  document.querySelectorAll('img[src]').forEach(async(img)=>{const original=img.getAttribute('src');if(!isAssetPath(original))return;const currentOk=await testImage(original);if(currentOk)return;const fixed=await resolveAsset(original);if(fixed)img.setAttribute('src',fixed);});
+  document.querySelectorAll('[style*="background-image"]').forEach(async(el)=>{const original=bgUrl(el.style.backgroundImage);if(!isAssetPath(original))return;const currentOk=await testImage(original);if(currentOk)return;const fixed=await resolveAsset(original);if(fixed)el.style.backgroundImage=`url("${fixed}")`;});
+})();
+</script>
+
 </body></html>
